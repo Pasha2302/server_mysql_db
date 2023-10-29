@@ -36,6 +36,29 @@ async def destroy_database_reader():
 # =================================================================================================================== #
 
 
+async def get_data_db_casino_guru_all_casinos(request: Request):
+    table_name_all_casinos = 'all_casinos'
+    name_db_casino_guru = 'casino_guru'
+
+    try:
+        read_db: ReadDB = request.app.state.read_db
+        await read_db.connect(name_db_casino_guru)
+        datas = await read_db.select_data(table=table_name_all_casinos, columns=['*'])
+
+        json_data_to_send = []
+        for data in datas:
+            data['date_added'] = data['date_added'].strftime("%Y-%m-%d %H:%M:%S.%f")
+            # print(data)
+            # print('--' * 60)
+            json_data_to_send.append(data)
+
+        print("message: Данные успешно отправлены")
+        print(f"{len(json_data_to_send)=}")
+        return JSONResponse(json_data_to_send)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 async def add_data_db_casino_guru_all_casinos(request: Request):
     table_name_all_casinos = 'all_casinos'
     name_db_casino_guru = 'casino_guru'
@@ -108,6 +131,7 @@ async def server_error(request: Request, exc: HTTPException):
 routes = [
     Route('/', homepage),
     Route('/add_data_db_casino_guru_all_casinos', add_data_db_casino_guru_all_casinos, methods=['POST', ]),
+    Route('/get_data_db_casino_guru_all_casinos', get_data_db_casino_guru_all_casinos, methods=['GET', ]),
     Route('/error', error),
     Mount('/static', app=StaticFiles(directory='statics'), name='static')
 ]
